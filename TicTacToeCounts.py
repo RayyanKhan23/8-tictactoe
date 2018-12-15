@@ -1,8 +1,9 @@
 
 # intro to tic-tac-toe unit
-# due 12-3-18, turned in for full credit 12-5 due to Friday absence
+# due 12-3-18
 # produces tree to find completed tic-tac-toe boards and
 # categorize them by win, lose, or draw, and at how many steps
+
 
 import time
 board = '.' * 9
@@ -10,6 +11,7 @@ t = time.clock()
 allPos = {0, 1, 2, 3, 4, 5, 6, 7, 8}
 WINSTR = [{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {6, 4, 2}]
 RESULTS = {}
+
 
 def isDone(pzl, filledPos):
     if filledPos < 5:
@@ -23,17 +25,20 @@ def isDone(pzl, filledPos):
         return True, 'D'
     return False, ''
 
+
 def allXs(pzl, cstr):
     for index in cstr:
         if pzl[index] != 'x':
             return False
     return True
 
+
 def allOs(pzl, cstr):
     for index in cstr:
         if pzl[index] != 'o':
             return False
     return True
+
 
 def updateResults(filledPos, pzl, result):
     if filledPos == 9:
@@ -46,10 +51,12 @@ def updateResults(filledPos, pzl, result):
     else:
         RESULTS[filledPos] = {pzl}
 
+
 def printPzl(pzl):
     print(' '.join(pzl[:3]))
     print(' '.join(pzl[3:6]))
     print(' '.join(pzl[6:]))
+
 
 def solvedStates():
     solve(board, 0, allPos)
@@ -72,25 +79,23 @@ def solvedStates():
         else:
             print('{} steps: O wins {} times.'.format(key, len(RESULTS[key])))
 
+
 def solve(pzl, filledPos, availablePos):
     solved, result = isDone(pzl, filledPos)
     if solved:
-        #print('new solution:')
-        #printPzl(pzl)
         updateResults(filledPos, pzl, result)
         return pzl
 
     for pos in availablePos:
         if filledPos % 2:
-            #print('filled pos:', filledPos, 'AvailablePos:', availablePos)
             newPzl = pzl[:pos] + 'o' + pzl[pos + 1:]
             newAvailablePos = availablePos - {pos}
             solve(newPzl, filledPos + 1, newAvailablePos)
         else:
-            #print('filled pos:', filledPos, 'AvailablePos:', availablePos)
             newPzl = pzl[:pos] + 'x' + pzl[pos + 1:]
             newAvailablePos = availablePos - {pos}
             solve(newPzl, filledPos + 1, newAvailablePos)
+
 
 
 solvedStates()
