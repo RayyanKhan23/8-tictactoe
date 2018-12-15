@@ -141,7 +141,6 @@ def getNextToken(pzl):  # used by startVals method if given a board
 
 def getPredictions(good, bad, tie):
     # just formats the sets into a nice string to print
-
     predictions = 'W: (' + ', '.join \
         ([str(i) for i in good]) if good else 'W: (none'
     predictions += ') L: (' + ', '.join \
@@ -226,6 +225,5 @@ def play():
                 output = 'Wow! You just lost. That sucks.' \
                     if result != 0 * personTurn else 'It\'s a tie :O'
                 exit(output)
-
 
 play()
