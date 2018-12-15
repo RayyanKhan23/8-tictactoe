@@ -6,7 +6,8 @@ import sys
 # globals
 BOARD = '.' * 9  # default
 ALLPOS = {0, 1, 2, 3, 4, 5, 6, 7, 8}
-WINSTR = [{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {6, 4, 2}]
+WINSTR = [{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6},
+          {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {6, 4, 2}]
 RESULTS = {}
 
 
@@ -38,66 +39,15 @@ def allOs(pzl, cstr):
     return True
 
 
-def updateResults(filledPos, pzl, result):  # update global results
-    if filledPos == 9:  # to include new finished games
-        if 9 in RESULTS:
-            RESULTS[filledPos].add((pzl, result))
-        else:
-            RESULTS[filledPos] = {(pzl, result)}
-    elif filledPos in RESULTS:
-        RESULTS[filledPos].add(pzl)
-    else:
-        RESULTS[filledPos] = {pzl}
-
-
-def makeMove(pzl, moveIndex, token):
-    return pzl[:moveIndex] + token + pzl[moveIndex + 1:]
-
-
-def printPzl(pzl):
-    print(' '.join(pzl[:3]))
-    print(' '.join(pzl[3:6]))
-    print(' '.join(pzl[6:]))
-
-
-def getNextToken(pzl):
-    if pzl.count('.') % 2:
-        return 'x'
-    return 'o'
-
-
-def getInp(prompt):
-    print(prompt)
-    return str(checkExit(msvcrt.getch()))
-
-
-def getMove(prompt, board):
-    print(prompt)
-    while True:
-        inp = int(checkExit(msvcrt.getch()))
-        if str(inp) not in '012345678':
-            print('That\'s not a move. Try again.')
-            continue
-        if board[inp] != '.':
-            print('That\'s taken. Move where?')
-            continue
-        return inp
-
-
-def checkExit(inp):
-    if ord(inp) == 27:
-        exit('Game ended.')
-    return inp
-
-
+# minimax / sort moves by good, bad, and draw
 def minimax(pzl):
     if pzl == '.' * 9:
-        return set(), set(), [4, 0, 2, 6, 8, 1, 3, 5, 7]
+        return set(), set(), {4, 0, 2, 6, 8, 1, 3, 5, 7}
 
     currentPlayer = 'x' if pzl.count('.') % 2 else 'o'
     solved, result = isDone(pzl, 9 - pzl.count('.'))
     if solved:
-        if result == -1 and currentPlayer == 'x':  # good, bad, draw
+        if result == -1 and currentPlayer == 'x':
             return set(), {-1}, set()
         elif result == 0:
             return set(), set(), {-1}
@@ -109,7 +59,8 @@ def minimax(pzl):
             return set(), {-1}, set()
 
     good, bad, tie = set(), set(), set()
-    possMoves = {index for index, chr in enumerate(pzl) if chr == '.'}  # fix/do better later
+    possMoves = {index for index, chr in
+                 enumerate(pzl) if chr == '.'}  # fix/do better later
 
     for move in possMoves:
         newPzl = pzl[:move] + currentPlayer + pzl[move + 1:]
@@ -125,9 +76,61 @@ def minimax(pzl):
     return good, bad, tie
 
 
+# play + its helper methods (alphabetical):
+
+def checkExit(inp):
+    if ord(inp) == 27:
+        exit('Game ended.')
+    return inp
+
+
+def getInp(prompt):
+    if len(sys.argv) == 2:
+        if len(sys.argv[1]) != 9:
+            print('Input wasn\'t the right length to be a board.')
+        else:
+            return sys.argv[1]
+    print(prompt)
+    return str(checkExit(msvcrt.getch()))
+
+
+def getMove(prompt, board):
+    print(prompt)
+    while True:
+        inp = str(checkExit(msvcrt.getch()))
+        if inp[2] not in '012345678':
+            print('That\'s not a move. Try again.')
+            continue
+        inp = int(inp[2])
+        if board[inp] != '.':
+            print('That\'s taken. Move where?')
+            continue
+        return inp
+
+
+def getNextToken(pzl):
+    if pzl.count('.') % 2:
+        return 'x'
+    return 'o'
+
+
+def getPredictions(good, bad, tie):
+    predictions = 'W: (' + ', '.join\
+        ([str(i) for i in good]) if good else 'W: (none'
+    predictions += ') L: (' + ', '.join\
+        ([str(i) for i in bad]) if bad else ') L: (none'
+    predictions += ') T: (' + ', '.join\
+        ([str(i) for i in tie]) + ')' if tie else ') T: (none)'
+    return predictions
+
+
+def makeMove(pzl, moveIndex, token):
+    return pzl[:moveIndex] + token + pzl[moveIndex + 1:]
+
+
 def setStartVals(inp):
     if len(inp) == 4:
-        personTkn = inp[0] if inp[0] in 'xo' else 'x'
+        personTkn = inp[2] if inp[2] in 'xo' else 'x'
         cptrTkn = 'o' if personTkn == 'x' else 'x'
         board = '.' * 9
         numMoves = 0
@@ -140,18 +143,21 @@ def setStartVals(inp):
     return personTkn, cptrTkn, personTurn, board, numMoves
 
 
-def getPredictions(good, bad, tie):
-    predictions = 'W: (' + ', '.join([str(i) for i in good]) if good else 'W: (none'
-    predictions += ') L: (' + ', '.join([str(i) for i in bad]) if bad else ') L: (none'
-    predictions += ') T: (' + ', '.join([str(i) for i in tie]) + ')' if tie else ') T: (none)'
-    return predictions
+def printPzl(pzl):
+    print(' '.join(pzl[:3]))
+    print(' '.join(pzl[3:6]))
+    print(' '.join(pzl[6:]))
 
 
 def play():
-    inp = sys.argv[1] if len(sys.argv) == 2 else getInp('X or O? If you press another key, you\'re X.')
-    personTkn, cptrTkn, personTurn, board, numMoves = setStartVals(inp)
+    print('Game started. Press \'Esc\' to exit.')
+    inp = getInp('X or O? If you press another key, you\'re X.')
 
-    print('Your token is: {} Computer\'s token is: {}'.format(personTkn, cptrTkn))
+    personTkn, cptrTkn, personTurn, board, numMoves \
+        = setStartVals(inp)
+
+    print('Your token is: {} Computer\'s token is: {}'
+          .format(personTkn, cptrTkn))
     printPzl(board)
 
     while numMoves != 9:
@@ -173,12 +179,14 @@ def play():
             move = [*good, *tie, *bad][0]
             predictions = getPredictions(good, bad, tie)
             board = makeMove(board, move, cptrTkn)
-            print('Computer placed {} at index {}: {}'.format(cptrTkn, move, predictions))
+            print('Computer placed {} at index {} of choices: {}'
+                  .format(cptrTkn, move, predictions))
             printPzl(board)
             numMoves += 1
             done, result = isDone(board, numMoves)
             if done:
-                output = 'Wow! You just lost. That sucks.' if result != 0 * personTurn else 'It\'s a tie :O'
+                output = 'Wow! You just lost. That sucks.'\
+                    if result != 0 * personTurn else 'It\'s a tie :O'
                 exit(output)
 
 
