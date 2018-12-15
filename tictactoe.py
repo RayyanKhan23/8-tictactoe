@@ -9,7 +9,7 @@ RESULTS = {}
 # helpers
 def isDone(pzl, filledPos): # check whether game is finished
     if filledPos < 5: # impossible to finish if < 5 moves
-        return False, 0
+        return False, ''
     for cstr in WINSTR:
         if allXs(pzl, cstr): # if there are 3 X's in a row
             return True, 1 # return that it's done with winner X
@@ -17,7 +17,7 @@ def isDone(pzl, filledPos): # check whether game is finished
             return True, -1
     if filledPos == 9: # if there's no X or O winner but board full
         return True, 0 # it's a draw
-    return False, 0
+    return False, ''
 
 def allXs(pzl, cstr): # check for 3 X's in a row, col, or diagonal
     for index in cstr:
@@ -51,37 +51,23 @@ def printPzl(pzl):
     print(' '.join(pzl[6:]))
 
 
-def minimax(pzl):
-    if pzl == '.'*9:
-        return set(), set(), {0, 1, 2, 3, 4, 5, 6, 7, 8}
-
-    currentPlayer = 'x' if pzl.count('.')%2 else 'o'
-    solved, result = isDone(pzl, 9 - pzl.count('.'))
+# ive got no idea what im doing
+def minimax(pzl, filledPos):
+    solved, result = isDone(pzl, filledPos)
     if solved:
-        if result == -1 and currentPlayer == 'x': # good, bad, draw
-            return set(), {-1}, set()
-        elif result == 0:
-            return set(), set(), {-1}
-        elif result == 1 and currentPlayer == 'x':
-            return {-1}, set(), set()
-        elif result == -1 and currentPlayer == 'o':
-            return {-1}, set(), set()
-        elif result == 1 and currentPlayer == 'o':
-            return set(), {-1}, set()
+        return {-1: result}
 
-    good, bad, tie = set(), set(), set()
+    moveResults = {}  # {move: board eval}
     possMoves = {index for index, chr in enumerate(pzl) if chr == '.'}  # fix/do better later
-    #tkn = 'o' if filledPos % 2 else 'x'
+    tkn = 'o' if filledPos % 2 else 'x'
 
     for move in possMoves:
-        newPzl = pzl[:move] + currentPlayer + pzl[move + 1:]
+        newPzl = pzl[:move] + tkn + pzl[move + 1:]
+        mmx = minimax(newPzl, filledPos + 1)
+        brdEval = min(mmx.values()) if tkn == 'x' else max(mmx.values())
+        moveResults[move] = brdEval
 
-        oppGood, oppBad, oppTie = minimax(newPzl)
-        if oppGood: bad.add(move)
-        elif oppTie: tie.add(move)
-        else: good.add(move)
-
-    return good,bad,tie
+    return moveResults
 
 
 # testing
@@ -91,15 +77,15 @@ def minimax(pzl):
 #testPzl = 'xx..oooxx' # one move away from o win in 8 steps
 #testPzl = 'x.x.xo.oo' # one move away from x win in 7 steps
 #testPzl = 'xo..oxx..' # one move away from o win in 6 steps
-#testPzl = 'o.xx.xo..' # one move away from x win in 5 steps
-#startSteps = 4 # one less than winning steps
+#testPzl = 'o.x..xo..' # one move away from x win in 5 steps
+#startSteps = 8 # one less than winning steps
 #printPzl(testPzl)
 #print(minimax(testPzl, startSteps))
 
 
 # idk input stuff
 inp = input('What token? ')
-personTkn = inp if inp in 'xo' else 'x'
+personTkn = inp if inp != '' else 'x'
 cptrTkn = 'o' if personTkn == 'x' else 'x'
 personMove = 1 if personTkn == 'x' else 0
 board = '.' * 9
@@ -118,26 +104,25 @@ while numMoves != 9: # clean up later
             input('Thats not a move. Try again dude. ')
         move = int(move)
         if board[move] != '.':
-            move = int(input('Thats taken. Move where? '))
+            input('Thats taken. Move where? ')
         board = makeMove(board, move, personTkn)
         print('You placed {} at index {}: '.format(personTkn, move))
         printPzl(board)
         numMoves += 1
         done, result = isDone(board, numMoves)
         if done:
-            output = 'Wow! You just won.' if result != 0 else 'Its a tie :O'
+            output = 'Wow! You just won.' if result == personMove else 'Its a tie :O'
             print(output)
             quit()
 
     else:
-        good, bad, tie = minimax(board)
-        move = [*good, *tie, *bad][0]
+        move = min(minimax(board, numMoves)) if cptrTkn == 'o' \
+            else max(minimax(board, numMoves))
         board = makeMove(board, move, cptrTkn)
         print('Computer placed {} at index {}: '.format(cptrTkn, move))
         printPzl(board)
         numMoves += 1
         done, result = isDone(board, numMoves)
         if done:
-            output = 'Wow! You just lost. That sucks.' if result != 0 * personMove else 'Its a tie :O'
-            print(output)
+            print('Wow! You just lost. That sucks.')
             quit()
