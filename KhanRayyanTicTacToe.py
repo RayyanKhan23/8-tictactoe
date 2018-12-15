@@ -24,6 +24,7 @@ def isDone(pzl, filledPos):  # check whether game is finished
     return False, 0
 
 
+# combine below two later if i feel like it
 def allXs(pzl, cstr):  # check for 3 X's in a row, col, or diagonal
     for index in cstr:
         if pzl[index] != 'x':
