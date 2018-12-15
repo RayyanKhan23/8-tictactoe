@@ -8,7 +8,6 @@ import sys
 
 # helpers
 def isDone(pzl, filledPos):  # check whether game is finished
-
     winstr = [{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6},
               {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {6, 4, 2}]
     # rows, columns, and diagonals to fill to win
@@ -84,7 +83,7 @@ def categorizeMoves(pzl):
     return good, bad, tie
 
 
-# play + its helper methods (alphabetical):
+# play + its helper methods:
 
 def checkExit(inp):
     if ord(inp) == 27:  # if its the 'esc' key
